@@ -297,6 +297,23 @@
 
     .field-card{padding:18px; overflow:hidden}
 
+    .field-scroll{
+      width:100%;
+      overflow-x:auto;
+      overflow-y:hidden;
+      padding-bottom:5px;
+      overscroll-behavior-x:contain;
+      scrollbar-color:rgba(255,255,255,.24) transparent;
+      scrollbar-width:thin;
+    }
+
+    .field-scroll::-webkit-scrollbar{height:8px}
+    .field-scroll::-webkit-scrollbar-track{background:transparent}
+    .field-scroll::-webkit-scrollbar-thumb{
+      border-radius:999px;
+      background:rgba(255,255,255,.22);
+    }
+
     .field-header{
       display:grid;
       grid-template-columns:1fr auto 1fr;
@@ -361,8 +378,10 @@
     .field{
       position:relative;
       width:100%;
-      height:clamp(610px, 52vw, 760px);
-      min-height:610px;
+      min-width:1040px;
+      aspect-ratio:16 / 9;
+      height:auto;
+      min-height:585px;
       border-radius:28px;
       overflow:hidden;
       background:
@@ -581,6 +600,41 @@
       scale:1.04;
     }
 
+    .player-chip.dragging.swap-ready{
+      border-color:#fff3a8;
+      box-shadow:
+        0 0 0 5px rgba(255,213,109,.22),
+        0 0 30px rgba(255,213,109,.48),
+        0 20px 34px rgba(0,0,0,.28);
+    }
+
+    .player-chip.swap-target{
+      z-index:9;
+      scale:1.13;
+      border-color:#fff3a8;
+      box-shadow:
+        0 0 0 5px rgba(255,213,109,.26),
+        0 0 34px rgba(255,213,109,.62),
+        0 16px 28px rgba(0,0,0,.24);
+      animation:swapPulse .55s ease-in-out infinite alternate;
+    }
+
+    .player-chip.swap-target::before{
+      content:"⇄";
+      position:absolute;
+      inset:0;
+      display:grid;
+      place-items:center;
+      border-radius:50%;
+      color:#fff8c7;
+      background:rgba(50,39,0,.46);
+      font-size:31px;
+      font-weight:1000;
+      text-shadow:0 2px 7px rgba(0,0,0,.35);
+      z-index:8;
+      pointer-events:none;
+    }
+
     .player-chip.blue{
       border-color:rgba(185,230,255,.70);
       box-shadow:
@@ -760,6 +814,11 @@
       to{opacity:1;transform:translateY(0)}
     }
 
+    @keyframes swapPulse{
+      from{filter:brightness(1);transform:translate(-50%, -50%) scale(1)}
+      to{filter:brightness(1.18);transform:translate(-50%, -50%) scale(1.04)}
+    }
+
     @media (max-width: 1180px){
       .hero,.layout{grid-template-columns:1fr}
       .hero-side{grid-template-columns:repeat(3,1fr)}
@@ -779,9 +838,10 @@
       .field-header{grid-template-columns:1fr}
       .team-summary.right{justify-items:start}
       .field{
-        width:100%;
-        height:560px;
-        min-height:560px;
+        width:1040px;
+        min-width:1040px;
+        height:585px;
+        min-height:585px;
       }
       .player-chip{
         width:64px;
@@ -821,8 +881,8 @@
         <div class="eyebrow">⚡ Football Team Randomizer</div>
         <h1>Chia đội bóng sân 5 và kéo thả đội hình</h1>
         <p>
-          Bản này đã thêm <b>vị trí GK</b> riêng cho mỗi đội và sửa lại <b>kích thước sân bóng</b> để hiển thị ổn định hơn.
-          Bạn có thể kéo thả từng cầu thủ trong phần sân của đội mình, hệ thống sẽ tự nhận diện <b>GK – DF – MF – ST</b>.
+          Sân bóng được thiết kế theo tỷ lệ rộng 16:9 để đội hình thoáng hơn.
+          Bạn có thể kéo cầu thủ để đổi vị trí, hoặc kéo thẻ của đội này đè lên cầu thủ đối phương rồi thả để <b>trao đổi hai cầu thủ</b>.
         </p>
       </div>
 
@@ -902,8 +962,8 @@ Trọng Nghĩa
               </div>
 
               <div class="field-center-note">
-                Kéo cầu thủ trong phần sân của đội mình<br>
-                để thay đổi vị trí trên sân
+                Kéo trong phần sân để đổi vị trí<br>
+                Kéo đè lên đối thủ để trao đổi cầu thủ
               </div>
 
               <div class="team-summary right">
@@ -912,7 +972,8 @@ Trọng Nghĩa
               </div>
             </div>
 
-            <div class="field" id="field">
+            <div class="field-scroll" id="fieldScroll">
+              <div class="field" id="field">
               <div class="half-label left">Đội Xanh</div>
               <div class="half-label right">Đội Đỏ</div>
 
@@ -929,8 +990,8 @@ Trọng Nghĩa
               <div class="zone-label z1">GK</div>
               <div class="zone-label z2">DF</div>
               <div class="zone-label z3">MF</div>
-              <div class="zone-label z4">ST</div>
-              <div class="zone-label z5">ST</div>
+              <div class="zone-label z4">FW</div>
+              <div class="zone-label z5">FW</div>
               <div class="zone-label z6">MF</div>
               <div class="zone-label z7">DF</div>
               <div class="zone-label z8">GK</div>
@@ -944,6 +1005,7 @@ Trọng Nghĩa
               <div class="goal-box right"></div>
               <div class="goal-net left"></div>
               <div class="goal-net right"></div>
+              </div>
             </div>
           </section>
 
@@ -1068,17 +1130,17 @@ Trọng Nghĩa
         if(x < 16) return "GK";
         if(x < 26) return "DF";
         if(x < 35) return "MF";
-        return "ST";
+        return "FW";
       }else{
         if(x > 84) return "GK";
         if(x > 74) return "DF";
         if(x > 65) return "MF";
-        return "ST";
+        return "FW";
       }
     }
 
     function getFormationCounts(team, side){
-      const counts = { "GK":0, "DF":0, "MF":0, "ST":0 };
+      const counts = { "GK":0, "DF":0, "MF":0, "FW":0 };
       team.forEach((player) => {
         counts[getRole(side, player.x)]++;
       });
@@ -1087,7 +1149,7 @@ Trọng Nghĩa
 
     function formationText(team, side){
       const c = getFormationCounts(team, side);
-      return `Sơ đồ: GK ${c["GK"]} | ${c["DF"]} - ${c["MF"]} - ${c["ST"]}`;
+      return `Sơ đồ: GK ${c["GK"]} | ${c["DF"]} - ${c["MF"]} - ${c["FW"]}`;
     }
 
     function updateFormationBadges(){
@@ -1105,7 +1167,7 @@ Trọng Nghĩa
         case "GK": return "🧤";
         case "DF": return "🛡️";
         case "MF": return "🪄";
-        case "ST": return "🎯";
+        case "FW": return "🎯";
         default: return "⚽";
       }
     }
@@ -1170,9 +1232,83 @@ Trọng Nghĩa
         : { minX: 52, maxX: 92, minY: 10, maxY: 90 };
     }
 
+    function isInsideOwnHalf(side, x){
+      const bounds = getTeamBounds(side);
+      return x >= bounds.minX && x <= bounds.maxX;
+    }
+
+    function getOppositeSide(side){
+      return side === "blue" ? "red" : "blue";
+    }
+
+    function clearCurrentSwapTarget(){
+      if(!dragState?.swapTarget) return;
+      dragState.swapTarget.element.classList.remove("swap-target");
+      dragState.swapTarget = null;
+      dragState.element.classList.remove("swap-ready");
+    }
+
+    function findSwapTarget(draggedElement, draggedSide){
+      const opponentSide = getOppositeSide(draggedSide);
+      const draggedRect = draggedElement.getBoundingClientRect();
+      const draggedArea = draggedRect.width * draggedRect.height;
+      let bestTarget = null;
+      let bestOverlapRatio = 0;
+
+      field.querySelectorAll(`.player-chip.${opponentSide}`).forEach((target) => {
+        const rect = target.getBoundingClientRect();
+        const overlapWidth = Math.max(
+          0,
+          Math.min(draggedRect.right, rect.right) - Math.max(draggedRect.left, rect.left)
+        );
+        const overlapHeight = Math.max(
+          0,
+          Math.min(draggedRect.bottom, rect.bottom) - Math.max(draggedRect.top, rect.top)
+        );
+        const overlapArea = overlapWidth * overlapHeight;
+        const targetArea = rect.width * rect.height;
+        const overlapRatio = overlapArea / Math.min(draggedArea, targetArea);
+
+        if(overlapRatio > bestOverlapRatio){
+          bestOverlapRatio = overlapRatio;
+          bestTarget = target;
+        }
+      });
+
+      if(!bestTarget || bestOverlapRatio < 0.28) return null;
+
+      return {
+        element:bestTarget,
+        side:bestTarget.dataset.side,
+        index:Number(bestTarget.dataset.index)
+      };
+    }
+
+    function setSwapTarget(target){
+      const previous = dragState?.swapTarget;
+
+      if(
+        previous &&
+        target &&
+        previous.side === target.side &&
+        previous.index === target.index
+      ){
+        return;
+      }
+
+      clearCurrentSwapTarget();
+
+      if(target){
+        dragState.swapTarget = target;
+        target.element.classList.add("swap-target");
+        dragState.element.classList.add("swap-ready");
+      }
+    }
+
     function startDragging(element, side, index, event){
       const rect = element.getBoundingClientRect();
       const fieldRect = field.getBoundingClientRect();
+      const player = latestResult[side][Number(index)];
 
       dragState = {
         element,
@@ -1180,7 +1316,12 @@ Trọng Nghĩa
         index:Number(index),
         pointerOffsetX:event.clientX - rect.left,
         pointerOffsetY:event.clientY - rect.top,
-        fieldRect
+        fieldRect,
+        originalX:player.x,
+        originalY:player.y,
+        currentX:player.x,
+        currentY:player.y,
+        swapTarget:null
       };
 
       element.classList.add("dragging");
@@ -1189,6 +1330,8 @@ Trọng Nghĩa
 
     function onPointerDown(event){
       if(!latestResult) return;
+      event.preventDefault();
+
       const element = event.currentTarget;
       startDragging(element, element.dataset.side, element.dataset.index, event);
       element.addEventListener("pointermove", onPointerMove);
@@ -1209,29 +1352,103 @@ Trọng Nghĩa
       let xPercent = (centerX / fieldRect.width) * 100;
       let yPercent = (centerY / fieldRect.height) * 100;
 
-      const bounds = getTeamBounds(side);
-      xPercent = clamp(xPercent, bounds.minX, bounds.maxX);
-      yPercent = clamp(yPercent, bounds.minY, bounds.maxY);
+      // Cho phép kéo qua cả hai nửa sân để tìm cầu thủ cần trao đổi.
+      xPercent = clamp(xPercent, 5.5, 94.5);
+      yPercent = clamp(yPercent, 8, 92);
+
+      dragState.currentX = xPercent;
+      dragState.currentY = yPercent;
 
       element.style.left = `${xPercent}%`;
       element.style.top = `${yPercent}%`;
-      element.querySelector(".player-line").textContent = getRole(side, xPercent);
 
-      const team = latestResult[side];
-      team[dragState.index].x = xPercent;
-      team[dragState.index].y = yPercent;
-      updateFormationBadges();
+      const target = findSwapTarget(element, side);
+      setSwapTarget(target);
+
+      const roleText = element.querySelector(".player-line");
+      const emoji = element.querySelector(".player-emoji");
+
+      if(target){
+        roleText.textContent = "SẴN SÀNG ĐỔI";
+        emoji.textContent = "🔄";
+      }else if(isInsideOwnHalf(side, xPercent)){
+        const role = getRole(side, xPercent);
+        roleText.textContent = role;
+        emoji.textContent = getRoleEmoji(role);
+      }else{
+        roleText.textContent = "THẢ LÊN ĐỐI THỦ";
+        emoji.textContent = "↔️";
+      }
+    }
+
+    function swapPlayersBetweenTeams(sourceSide, sourceIndex, targetSide, targetIndex){
+      const sourceTeam = latestResult[sourceSide];
+      const targetTeam = latestResult[targetSide];
+      const sourcePlayer = sourceTeam[sourceIndex];
+      const targetPlayer = targetTeam[targetIndex];
+
+      const sourcePosition = { x:sourcePlayer.x, y:sourcePlayer.y };
+      const targetPosition = { x:targetPlayer.x, y:targetPlayer.y };
+
+      sourceTeam[sourceIndex] = {
+        ...targetPlayer,
+        x:sourcePosition.x,
+        y:sourcePosition.y
+      };
+
+      targetTeam[targetIndex] = {
+        ...sourcePlayer,
+        x:targetPosition.x,
+        y:targetPosition.y
+      };
+
+      return {
+        sourceName:sourcePlayer.name,
+        targetName:targetPlayer.name
+      };
+    }
+
+    function finishDragListeners(element, event){
+      element.classList.remove("dragging", "swap-ready");
+      element.releasePointerCapture?.(event.pointerId);
+      element.removeEventListener("pointermove", onPointerMove);
+      element.removeEventListener("pointerup", onPointerUp);
+      element.removeEventListener("pointercancel", onPointerUp);
     }
 
     function onPointerUp(event){
       if(!dragState) return;
-      const element = dragState.element;
-      element.classList.remove("dragging");
-      element.releasePointerCapture?.(event.pointerId);
 
-      element.removeEventListener("pointermove", onPointerMove);
-      element.removeEventListener("pointerup", onPointerUp);
-      element.removeEventListener("pointercancel", onPointerUp);
+      const state = dragState;
+      const target = state.swapTarget;
+      const canceled = event.type === "pointercancel";
+
+      finishDragListeners(state.element, event);
+      clearCurrentSwapTarget();
+
+      if(!canceled && target){
+        const result = swapPlayersBetweenTeams(
+          state.side,
+          state.index,
+          target.side,
+          target.index
+        );
+
+        showMessage(
+          `Đã trao đổi ${result.sourceName} và ${result.targetName} MF hai đội.`,
+          "success"
+        );
+      }else if(!canceled && isInsideOwnHalf(state.side, state.currentX)){
+        const bounds = getTeamBounds(state.side);
+        const player = latestResult[state.side][state.index];
+        player.x = clamp(state.currentX, bounds.minX, bounds.maxX);
+        player.y = clamp(state.currentY, bounds.minY, bounds.maxY);
+      }else if(!canceled){
+        showMessage(
+          "Để đổi đội, hãy kéo cầu thủ đè lên thẻ của cầu thủ đối phương rồi thả.",
+          "error"
+        );
+      }
 
       dragState = null;
       renderField();
